@@ -73,13 +73,6 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: var(--spacing-xs);
-}
-
-.subtitle {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    font-weight: 300;
 }
 
 /* ===================================
@@ -286,16 +279,90 @@ body {
 }
 
 /* ===================================
+   Preview Gallery Section
+   =================================== */
+
+.preview-section {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.preview-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preview-gallery {
+    display: flex;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    padding: var(--spacing-xs) 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--surface-light);
+}
+
+.preview-gallery::-webkit-scrollbar {
+    height: 8px;
+}
+
+.preview-gallery::-webkit-scrollbar-track {
+    background: var(--surface-light);
+    border-radius: 4px;
+}
+
+.preview-gallery::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.preview-gallery::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.preview-thumbnail {
+    flex-shrink: 0;
+    width: 120px;
+    height: 72px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: var(--transition);
+    position: relative;
+    background: #000;
+}
+
+.preview-thumbnail:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.preview-thumbnail.active {
+    border-color: var(--success);
+    box-shadow: 0 0 0 2px var(--success);
+}
+
+.preview-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ===================================
    Responsive Design
    =================================== */
 
 @media (max-width: 768px) {
     .header h1 {
         font-size: 2rem;
-    }
-
-    .subtitle {
-        font-size: 1rem;
     }
 
     .file-label {
@@ -329,6 +396,11 @@ body {
     .btn {
         width: 100%;
     }
+
+    .preview-thumbnail {
+        width: 100px;
+        height: 60px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -340,13 +412,14 @@ body {
         font-size: 1.5rem;
     }
 
-    .subtitle {
-        font-size: 0.9rem;
-    }
-
     .upload-section,
     .controls-section {
         padding: var(--spacing-md);
+    }
+
+    .preview-thumbnail {
+        width: 80px;
+        height: 48px;
     }
 }
 

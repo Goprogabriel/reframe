@@ -38,6 +38,8 @@ let currentIndex = 0;
 const imageUpload = document.getElementById('imageUpload');
 const editorSection = document.getElementById('editorSection');
 const controlsSection = document.getElementById('controlsSection');
+const previewSection = document.getElementById('previewSection');
+const previewGallery = document.getElementById('previewGallery');
 const editorCanvas = document.getElementById('editorCanvas');
 const imageInfo = document.getElementById('imageInfo');
 const prevBtn = document.getElementById('prevBtn');
@@ -127,6 +129,10 @@ async function handleFileUpload(event) {
         // Show editor and controls
         editorSection.style.display = 'flex';
         controlsSection.style.display = 'block';
+        previewSection.style.display = 'block';
+        
+        // Build preview gallery
+        buildPreviewGallery();
         
         // Initialize and display first image
         currentIndex = 0;
@@ -199,6 +205,51 @@ function initImageState(imageState) {
 // ===================================
 
 /**
+ * Build the preview gallery with thumbnails
+ */
+function buildPreviewGallery() {
+    // Clear existing thumbnails
+    previewGallery.innerHTML = '';
+    
+    images.forEach((imageState, index) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.className = 'preview-thumbnail';
+        if (index === currentIndex) {
+            thumbnail.classList.add('active');
+        }
+        
+        const img = document.createElement('img');
+        img.src = imageState.img.src;
+        img.alt = imageState.file.name;
+        
+        thumbnail.appendChild(img);
+        
+        // Click handler to switch to this image
+        thumbnail.addEventListener('click', () => {
+            currentIndex = index;
+            displayCurrentImage();
+            updatePreviewSelection();
+        });
+        
+        previewGallery.appendChild(thumbnail);
+    });
+}
+
+/**
+ * Update which thumbnail is marked as active
+ */
+function updatePreviewSelection() {
+    const thumbnails = previewGallery.querySelectorAll('.preview-thumbnail');
+    thumbnails.forEach((thumb, index) => {
+        if (index === currentIndex) {
+            thumb.classList.add('active');
+        } else {
+            thumb.classList.remove('active');
+        }
+    });
+}
+
+/**
  * Display the current image in the editor
  */
 function displayCurrentImage() {
@@ -209,6 +260,7 @@ function displayCurrentImage() {
     // Update UI
     updateImageInfo();
     updateNavigationButtons();
+    updatePreviewSelection();
     
     // Draw the image
     drawEditorImage();
