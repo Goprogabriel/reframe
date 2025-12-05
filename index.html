@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Reframe - Upload, zoom, pan, and export images as fixed 3000×1800 JPEGs">
+    <title>Reframe - Image Editor</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Reframe</h1>
+            <p class="subtitle">Professional image framing and export tool</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="upload-wrapper">
+                <label for="imageUpload" class="file-label">
+                    <span class="upload-icon">📁</span>
+                    <span>Choose Images</span>
+                </label>
+                <input 
+                    type="file" 
+                    id="imageUpload" 
+                    accept="image/*" 
+                    multiple 
+                    class="file-input"
+                >
+            </div>
+            <p class="instructions">
+                Upload images, zoom with scroll, drag to reposition, and export as 3000×1800 JPG.
+            </p>
+        </section>
+
+        <!-- Editor Section -->
+        <section class="editor-section" id="editorSection" style="display: none;">
+            <div class="canvas-wrapper">
+                <canvas id="editorCanvas"></canvas>
+            </div>
+        </section>
+
+        <!-- Controls Section -->
+        <section class="controls-section" id="controlsSection" style="display: none;">
+            <div class="image-info">
+                <p id="imageInfo">Image 1 of 1 — filename.jpg</p>
+            </div>
+            
+            <div class="navigation-buttons">
+                <button id="prevBtn" class="btn btn-nav">
+                    <span>← Previous</span>
+                </button>
+                <button id="nextBtn" class="btn btn-nav">
+                    <span>Next →</span>
+                </button>
+            </div>
+
+            <div class="export-buttons">
+                <button id="downloadCurrentBtn" class="btn btn-primary">
+                    <span>📥 Download this image</span>
+                </button>
+                <button id="downloadAllBtn" class="btn btn-secondary">
+                    <span>📦 Download all</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with pure HTML, CSS, and JavaScript • No external dependencies</p>
+        </footer>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
