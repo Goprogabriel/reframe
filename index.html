@@ -28,16 +28,73 @@
                     multiple 
                     class="file-input"
                 >
+                <button id="helpBtn" class="help-btn" title="How to use">
+                    <span>❓</span>
+                </button>
             </div>
             <p class="instructions">
                 Upload images, zoom with scroll, drag to reposition, and export as 3000×1800 JPG.
             </p>
         </section>
 
+        <!-- Help Modal -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" id="closeModal">&times;</span>
+                <h2>How to Use Reframe</h2>
+                <div class="help-steps">
+                    <div class="help-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Upload Images</h3>
+                            <p>Click "Choose Images" and select one or more images from your device. All common image formats are supported.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Position Your Image</h3>
+                            <p><strong>Zoom:</strong> Use your mouse wheel (or pinch on touch devices) to zoom in and out.<br>
+                            <strong>Pan:</strong> Click and drag the image to reposition it within the frame.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Frame Your Shot</h3>
+                            <p>The rectangular frame shows what will be exported. Position and zoom your image so the desired area fills the frame. The original image is never cropped - only the framed area is exported.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Navigate Between Images</h3>
+                            <p>If you uploaded multiple images, use the thumbnails below the editor or the Previous/Next buttons to switch between them. Each image keeps its own zoom and position settings.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3>Export</h3>
+                            <p>Click "Download this image" to export the current image, or "Download all" to export all images at once. Each export is exactly 3000×1800 pixels in JPEG format, optimized to be under 1 MB.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Editor Section -->
         <section class="editor-section" id="editorSection" style="display: none;">
             <div class="canvas-wrapper">
                 <canvas id="editorCanvas"></canvas>
+            </div>
+        </section>
+
+        <!-- Preview Gallery Section -->
+        <section class="preview-section" id="previewSection" style="display: none;">
+            <div class="preview-label">All Images</div>
+            <div class="preview-gallery" id="previewGallery">
+                <!-- Preview thumbnails will be inserted here -->
             </div>
         </section>
 

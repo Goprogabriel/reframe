@@ -46,6 +46,9 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const downloadCurrentBtn = document.getElementById('downloadCurrentBtn');
 const downloadAllBtn = document.getElementById('downloadAllBtn');
+const helpBtn = document.getElementById('helpBtn');
+const helpModal = document.getElementById('helpModal');
+const closeModal = document.getElementById('closeModal');
 
 const ctx = editorCanvas.getContext('2d', { willReadFrequently: false });
 
@@ -62,6 +65,15 @@ prevBtn.addEventListener('click', showPreviousImage);
 nextBtn.addEventListener('click', showNextImage);
 downloadCurrentBtn.addEventListener('click', downloadCurrentImage);
 downloadAllBtn.addEventListener('click', downloadAllImages);
+helpBtn.addEventListener('click', openHelpModal);
+closeModal.addEventListener('click', closeHelpModal);
+
+// Close modal when clicking outside
+helpModal.addEventListener('click', (event) => {
+    if (event.target === helpModal) {
+        closeHelpModal();
+    }
+});
 
 // Canvas interaction events
 editorCanvas.addEventListener('wheel', handleWheel, { passive: false });
@@ -87,6 +99,24 @@ let panOffsetY = 0;
 
 // Touch state
 let lastTouchDistance = 0;
+
+// ===================================
+// HELP MODAL
+// ===================================
+
+/**
+ * Open the help modal
+ */
+function openHelpModal() {
+    helpModal.classList.add('show');
+}
+
+/**
+ * Close the help modal
+ */
+function closeHelpModal() {
+    helpModal.classList.remove('show');
+}
 
 // ===================================
 // FILE UPLOAD HANDLING
@@ -464,7 +494,8 @@ function stopPan() {
 }
 
 /**
- * Constrain panning so image doesn't leave frame completely
+ * Constrain panning so image can be positioned freely
+ * This allows non-destructive cropping - users can position any part of the image
  * @param {Object} imageState - The image state to constrain
  */
 function constrainPan(imageState) {
@@ -473,15 +504,10 @@ function constrainPan(imageState) {
     const scaledWidth = img.width * scale;
     const scaledHeight = img.height * scale;
     
-    // Allow some margin but prevent image from leaving frame completely
-    const maxOffsetX = EDITOR_CANVAS_WIDTH * 0.8;
-    const minOffsetX = -scaledWidth + EDITOR_CANVAS_WIDTH * 0.2;
-    
-    const maxOffsetY = EDITOR_CANVAS_HEIGHT * 0.8;
-    const minOffsetY = -scaledHeight + EDITOR_CANVAS_HEIGHT * 0.2;
-    
-    imageState.offsetX = Math.max(minOffsetX, Math.min(maxOffsetX, imageState.offsetX));
-    imageState.offsetY = Math.max(minOffsetY, Math.min(maxOffsetY, imageState.offsetY));
+    // Allow full freedom of movement - no constraints
+    // This enables non-destructive cropping where users can choose
+    // exactly what part of their image to export
+    // The original image is never actually cropped, only the framed area is exported
 }
 
 // ===================================
