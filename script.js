@@ -36,6 +36,7 @@ let currentIndex = 0;
 // ===================================
 
 const imageUpload = document.getElementById('imageUpload');
+const uploadSection = document.getElementById('uploadSection');
 const editorSection = document.getElementById('editorSection');
 const controlsSection = document.getElementById('controlsSection');
 const previewSection = document.getElementById('previewSection');
@@ -47,6 +48,8 @@ const nextBtn = document.getElementById('nextBtn');
 const downloadCurrentBtn = document.getElementById('downloadCurrentBtn');
 const downloadAllBtn = document.getElementById('downloadAllBtn');
 const helpBtn = document.getElementById('helpBtn');
+const helpBtn2 = document.getElementById('helpBtn2');
+const helpBtnFixed = document.getElementById('helpBtnFixed');
 const helpModal = document.getElementById('helpModal');
 const closeModal = document.getElementById('closeModal');
 
@@ -66,6 +69,7 @@ nextBtn.addEventListener('click', showNextImage);
 downloadCurrentBtn.addEventListener('click', downloadCurrentImage);
 downloadAllBtn.addEventListener('click', downloadAllImages);
 helpBtn.addEventListener('click', openHelpModal);
+helpBtn2.addEventListener('click', openHelpModal);
 closeModal.addEventListener('click', closeHelpModal);
 
 // Close modal when clicking outside
@@ -141,9 +145,13 @@ async function handleFileUpload(event) {
         return;
     }
 
-    // Reset state
-    images = [];
-    currentIndex = 0;
+    // If this is the first upload, reset state
+    const isFirstUpload = images.length === 0;
+    
+    if (isFirstUpload) {
+        images = [];
+        currentIndex = 0;
+    }
 
     // Load all images
     for (const file of imageFiles) {
@@ -156,6 +164,12 @@ async function handleFileUpload(event) {
     }
 
     if (images.length > 0) {
+        // Hide upload section and show fixed help button
+        if (isFirstUpload) {
+            uploadSection.style.display = 'none';
+            helpBtnFixed.style.display = 'block';
+        }
+        
         // Show editor and controls
         editorSection.style.display = 'flex';
         controlsSection.style.display = 'block';
@@ -164,12 +178,17 @@ async function handleFileUpload(event) {
         // Build preview gallery
         buildPreviewGallery();
         
-        // Initialize and display first image
-        currentIndex = 0;
+        // If first upload, display first image, otherwise keep current
+        if (isFirstUpload) {
+            currentIndex = 0;
+        }
         displayCurrentImage();
     } else {
         alert('Failed to load any images. Please try again.');
     }
+    
+    // Reset file input
+    event.target.value = '';
 }
 
 /**
@@ -183,7 +202,8 @@ function loadImage(file) {
         const url = URL.createObjectURL(file);
 
         img.onload = () => {
-            URL.revokeObjectURL(url);
+            // Don't revoke URL - we need it for thumbnails
+            // Store the URL in the image state for later cleanup if needed
             
             // Calculate minimum scale to cover the frame
             const scaleX = EDITOR_CANVAS_WIDTH / img.width;
@@ -193,6 +213,7 @@ function loadImage(file) {
             const imageState = {
                 file: file,
                 img: img,
+                imageUrl: url,  // Keep reference to URL
                 scale: minScale,
                 offsetX: 0,
                 offsetY: 0,
@@ -249,10 +270,22 @@ function buildPreviewGallery() {
         }
         
         const img = document.createElement('img');
+        // Use the actual image source from the loaded image
         img.src = imageState.img.src;
         img.alt = imageState.file.name;
         
         thumbnail.appendChild(img);
+        
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'preview-remove';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.title = 'Remove image';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeImage(index);
+        });
+        thumbnail.appendChild(removeBtn);
         
         // Click handler to switch to this image
         thumbnail.addEventListener('click', () => {
@@ -263,13 +296,22 @@ function buildPreviewGallery() {
         
         previewGallery.appendChild(thumbnail);
     });
+    
+    // Add "Add Image" button at the end
+    const addImageThumbnail = document.createElement('div');
+    addImageThumbnail.className = 'preview-thumbnail add-image';
+    addImageThumbnail.innerHTML = '<span>+</span><span class="add-text">Add Image</span>';
+    addImageThumbnail.addEventListener('click', () => {
+        imageUpload.click();
+    });
+    previewGallery.appendChild(addImageThumbnail);
 }
 
 /**
  * Update which thumbnail is marked as active
  */
 function updatePreviewSelection() {
-    const thumbnails = previewGallery.querySelectorAll('.preview-thumbnail');
+    const thumbnails = previewGallery.querySelectorAll('.preview-thumbnail:not(.add-image)');
     thumbnails.forEach((thumb, index) => {
         if (index === currentIndex) {
             thumb.classList.add('active');
@@ -277,6 +319,43 @@ function updatePreviewSelection() {
             thumb.classList.remove('active');
         }
     });
+}
+
+/**
+ * Remove an image from the gallery
+ * @param {number} index - The index of the image to remove
+ */
+function removeImage(index) {
+    // Revoke the object URL to free memory
+    if (images[index].imageUrl) {
+        URL.revokeObjectURL(images[index].imageUrl);
+    }
+    
+    if (images.length === 1) {
+        // If this is the last image, reset everything
+        images = [];
+        currentIndex = 0;
+        editorSection.style.display = 'none';
+        controlsSection.style.display = 'none';
+        previewSection.style.display = 'none';
+        uploadSection.style.display = 'block';
+        helpBtnFixed.style.display = 'none';
+        return;
+    }
+    
+    // Remove the image
+    images.splice(index, 1);
+    
+    // Adjust current index if needed
+    if (currentIndex >= images.length) {
+        currentIndex = images.length - 1;
+    } else if (currentIndex > index) {
+        currentIndex--;
+    }
+    
+    // Rebuild gallery and display
+    buildPreviewGallery();
+    displayCurrentImage();
 }
 
 /**

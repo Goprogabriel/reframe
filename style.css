@@ -145,6 +145,13 @@ body {
     box-shadow: 0 4px 12px rgba(224, 91, 66, 0.3);
 }
 
+.help-btn-fixed {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: 100;
+}
+
 .instructions {
     color: var(--text-secondary);
     font-size: 0.95rem;
@@ -467,6 +474,38 @@ body {
     background: #000;
 }
 
+.preview-thumbnail.add-image {
+    background: var(--surface-light);
+    border: 3px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.25rem;
+    cursor: pointer;
+}
+
+.preview-thumbnail.add-image:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(224, 91, 66, 0.3);
+}
+
+.preview-thumbnail.add-image span {
+    font-size: 1.5rem;
+}
+
+.preview-thumbnail.add-image .add-text {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.preview-thumbnail.add-image:hover .add-text {
+    color: white;
+}
+
 .preview-thumbnail:hover {
     border-color: var(--primary-color);
     transform: translateY(-2px);
@@ -483,6 +522,36 @@ body {
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.preview-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: rgba(224, 91, 66, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: var(--transition);
+    z-index: 10;
+    opacity: 0;
+}
+
+.preview-thumbnail:hover .preview-remove {
+    opacity: 1;
+}
+
+.preview-remove:hover {
+    background: #c94d35;
+    transform: scale(1.1);
 }
 
 /* ===================================
@@ -543,6 +612,11 @@ body {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
+
+    .help-btn-fixed {
+        bottom: var(--spacing-md);
+        right: var(--spacing-md);
+    }
 }
 
 @media (max-width: 480px) {
@@ -570,6 +644,17 @@ body {
     }
 
     .modal-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .help-btn-fixed {
+        bottom: var(--spacing-sm);
+        right: var(--spacing-sm);
+    }
+
+    .help-btn-fixed .help-btn {
+        width: 45px;
+        height: 45px;
         font-size: 1.3rem;
     }
 }

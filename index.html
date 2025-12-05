@@ -15,7 +15,7 @@
         </header>
 
         <!-- Upload Section -->
-        <section class="upload-section">
+        <section class="upload-section" id="uploadSection">
             <div class="upload-wrapper">
                 <label for="imageUpload" class="file-label">
                     <span class="upload-icon">📁</span>
@@ -36,6 +36,13 @@
                 Upload images, zoom with scroll, drag to reposition, and export as 3000×1800 JPG.
             </p>
         </section>
+
+        <!-- Help Button (visible when images are loaded) -->
+        <div class="help-btn-fixed" id="helpBtnFixed" style="display: none;">
+            <button id="helpBtn2" class="help-btn" title="How to use">
+                <span>❓</span>
+            </button>
+        </div>
 
         <!-- Help Modal -->
         <div id="helpModal" class="modal">
