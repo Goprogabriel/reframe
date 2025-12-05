@@ -9,17 +9,17 @@
 }
 
 :root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
+    --primary-color: #E05B42;
+    --primary-hover: #c94d35;
     --secondary-color: #64748b;
     --secondary-hover: #475569;
-    --background: #0f172a;
-    --surface: #1e293b;
-    --surface-light: #334155;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --border: #475569;
-    --success: #10b981;
+    --background: #303D4A;
+    --surface: #303D4A;
+    --surface-light: #3d4d5e;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --border: #4a5866;
+    --success: #E05B42;
     --max-width: 1400px;
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
@@ -69,10 +69,7 @@ body {
 .header h1 {
     font-size: 3rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--success));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #E05B42;
 }
 
 /* ===================================
@@ -250,7 +247,7 @@ body {
 
 .btn-primary:not(:disabled):hover {
     background: var(--primary-hover);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(224, 91, 66, 0.3);
 }
 
 .btn-secondary {
@@ -341,12 +338,12 @@ body {
 .preview-thumbnail:hover {
     border-color: var(--primary-color);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(224, 91, 66, 0.3);
 }
 
 .preview-thumbnail.active {
-    border-color: var(--success);
-    box-shadow: 0 0 0 2px var(--success);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
 }
 
 .preview-thumbnail img {
