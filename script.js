@@ -217,22 +217,30 @@ function loadImage(file) {
             // Don't revoke URL - we need it for thumbnails
             // Store the URL in the image state for later cleanup if needed
             
-            // Calculate minimum scale to cover the frame
+            // Calculate scales for cover (may crop) and contain (fit fully)
             const scaleX = EDITOR_CANVAS_WIDTH / img.width;
             const scaleY = EDITOR_CANVAS_HEIGHT / img.height;
-            const minScale = Math.max(scaleX, scaleY);
+            const minScaleCover = Math.max(scaleX, scaleY);  // cover - fills frame, may crop
+            const minScaleContain = Math.min(scaleX, scaleY); // contain - fits fully
+
+            // Choose initial scale based on current UI mode (compress-only shows full image)
+            const initialScale = (modeCompressOnly && modeCompressOnly.checked) ? minScaleContain : minScaleCover;
 
             const imageState = {
                 file: file,
                 img: img,
                 imageUrl: url,  // Keep reference to URL
-                scale: minScale,
+                scale: initialScale,
                 offsetX: 0,
                 offsetY: 0,
-                minScale: minScale
+                // store both scales for future toggling
+                minScaleCover: minScaleCover,
+                minScaleContain: minScaleContain,
+                // current minScale used for zoom constraints
+                minScale: initialScale
             };
 
-            // Initialize with centered position
+            // Initialize with centered position using the chosen scale
             initImageState(imageState);
             
             resolve(imageState);
@@ -259,6 +267,39 @@ function initImageState(imageState) {
     const scaledHeight = img.height * scale;
     
     // Center the image in the canvas
+    imageState.offsetX = (EDITOR_CANVAS_WIDTH - scaledWidth) / 2;
+    imageState.offsetY = (EDITOR_CANVAS_HEIGHT - scaledHeight) / 2;
+}
+
+// Update view when the user toggles Reframe vs Compress-only
+modeReframe.addEventListener('change', handleModeChange);
+modeCompressOnly.addEventListener('change', handleModeChange);
+
+function handleModeChange() {
+    if (images.length === 0) return;
+    const imageState = images[currentIndex];
+    applyViewModeToImage(imageState);
+    displayCurrentImage();
+}
+
+/**
+ * Apply selected view mode to an image state.
+ * For 'compress only' we switch to the contain scale (show full image centered).
+ * For 'reframe' we switch to the cover scale (same behaviour as before).
+ */
+function applyViewModeToImage(imageState) {
+    if (!imageState || !imageState.img) return;
+
+    const isCompress = modeCompressOnly && modeCompressOnly.checked;
+    const targetScale = isCompress ? imageState.minScaleContain : imageState.minScaleCover;
+
+    imageState.scale = targetScale;
+    imageState.minScale = targetScale;
+
+    // Center the image so the full image is visible for contain
+    const scaledWidth = imageState.img.width * imageState.scale;
+    const scaledHeight = imageState.img.height * imageState.scale;
+
     imageState.offsetX = (EDITOR_CANVAS_WIDTH - scaledWidth) / 2;
     imageState.offsetY = (EDITOR_CANVAS_HEIGHT - scaledHeight) / 2;
 }
@@ -382,6 +423,11 @@ function displayCurrentImage() {
     updateImageInfo();
     updateNavigationButtons();
     updatePreviewSelection();
+    
+    // If compress-only mode is active ensure the full image is visible (contain)
+    if (modeCompressOnly && modeCompressOnly.checked) {
+        applyViewModeToImage(imageState);
+    }
     
     // Draw the image
     drawEditorImage();
