@@ -53,6 +53,18 @@ const helpBtnFixed = document.getElementById('helpBtnFixed');
 const helpModal = document.getElementById('helpModal');
 const closeModal = document.getElementById('closeModal');
 
+const modeReframe = document.getElementById('modeReframe');
+const modeCompressOnly = document.getElementById('modeCompressOnly');
+const outputFormat = document.getElementById('outputFormat');
+const qualityRange = document.getElementById('qualityRange');
+const qualityLabel = document.getElementById('qualityLabel');
+
+// Initialize quality label and keep it in sync
+qualityLabel.textContent = Math.round(parseFloat(qualityRange.value) * 100) + '%';
+qualityRange.addEventListener('input', () => {
+    qualityLabel.textContent = Math.round(parseFloat(qualityRange.value) * 100) + '%';
+});
+
 const ctx = editorCanvas.getContext('2d', { willReadFrequently: false });
 
 // Set canvas dimensions
@@ -702,7 +714,12 @@ async function downloadCurrentImage() {
 
     try {
         const imageState = images[currentIndex];
-        await exportSingleImage(imageState);
+        const options = {
+            reframe: modeReframe && modeReframe.checked,
+            format: outputFormat ? outputFormat.value : 'image/jpeg',
+            quality: qualityRange ? parseFloat(qualityRange.value) : INITIAL_JPEG_QUALITY
+        };
+        await exportSingleImage(imageState, options);
     } catch (error) {
         console.error('Export failed:', error);
         alert('Failed to export image. Please try again.');
@@ -719,12 +736,17 @@ async function downloadAllImages() {
     if (images.length === 0) return;
 
     downloadAllBtn.disabled = true;
+    const options = {
+        reframe: modeReframe && modeReframe.checked,
+        format: outputFormat ? outputFormat.value : 'image/jpeg',
+        quality: qualityRange ? parseFloat(qualityRange.value) : INITIAL_JPEG_QUALITY
+    };
     
     for (let i = 0; i < images.length; i++) {
         downloadAllBtn.innerHTML = `<span>⏳ Processing ${i + 1}/${images.length}...</span>`;
         
         try {
-            await exportSingleImage(images[i]);
+            await exportSingleImage(images[i], options);
             
             // Small delay between downloads to prevent browser blocking
             if (i < images.length - 1) {
@@ -743,44 +765,46 @@ async function downloadAllImages() {
  * Export a single image with proper scaling
  * @param {Object} imageState - The image state to export
  */
-async function exportSingleImage(imageState) {
+async function exportSingleImage(imageState, options = {}) {
     const { img, scale, offsetX, offsetY, file } = imageState;
+    const reframe = options.reframe ?? (modeReframe ? modeReframe.checked : true);
+    let format = options.format || 'image/jpeg';
+    const quality = options.quality ?? INITIAL_JPEG_QUALITY;
 
-    // Create export canvas
     const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = EXPORT_WIDTH;
-    exportCanvas.height = EXPORT_HEIGHT;
-    const exportCtx = exportCanvas.getContext('2d', { willReadFrequently: false });
+    let filenameBase = file.name.replace(/\.[^/.]+$/, '');
+    let filename = filenameBase + (reframe ? '_reframed' : '_compressed');
 
-    // Calculate scale ratio from editor to export
-    const scaleRatio = EXPORT_WIDTH / EDITOR_CANVAS_WIDTH;
+    if (reframe) {
+        exportCanvas.width = EXPORT_WIDTH;
+        exportCanvas.height = EXPORT_HEIGHT;
+        const exportCtx = exportCanvas.getContext('2d', { willReadFrequently: false });
 
-    // Calculate export dimensions and position
-    const exportScale = scale * scaleRatio;
-    const exportOffsetX = offsetX * scaleRatio;
-    const exportOffsetY = offsetY * scaleRatio;
-    const exportScaledWidth = img.width * exportScale;
-    const exportScaledHeight = img.height * exportScale;
+        const scaleRatio = EXPORT_WIDTH / EDITOR_CANVAS_WIDTH;
+        const exportScale = scale * scaleRatio;
+        const exportOffsetX = offsetX * scaleRatio;
+        const exportOffsetY = offsetY * scaleRatio;
+        const exportScaledWidth = img.width * exportScale;
+        const exportScaledHeight = img.height * exportScale;
 
-    // Fill background
-    exportCtx.fillStyle = '#000000';
-    exportCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+        exportCtx.fillStyle = '#000000';
+        exportCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+        exportCtx.drawImage(img, exportOffsetX, exportOffsetY, exportScaledWidth, exportScaledHeight);
+    } else {
+        // Compress only: use original image dimensions and content
+        exportCanvas.width = img.width;
+        exportCanvas.height = img.height;
+        const exportCtx = exportCanvas.getContext('2d', { willReadFrequently: false });
 
-    // Draw image
-    exportCtx.drawImage(
-        img,
-        exportOffsetX,
-        exportOffsetY,
-        exportScaledWidth,
-        exportScaledHeight
-    );
+        exportCtx.fillStyle = '#000000';
+        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        exportCtx.drawImage(img, 0, 0, img.width, img.height);
+    }
 
-    // Generate filename
-    const originalName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-    const filename = `${originalName}_reframed.jpg`;
+    const ext = mimeToExtension(format);
+    filename = `${filename}.${ext}`;
 
-    // Export with size constraint
-    await exportJpegWithMaxSize(exportCanvas, filename, MAX_FILE_SIZE);
+    await exportCanvasWithFormatMaxSize(exportCanvas, filename, format, MAX_FILE_SIZE, quality);
 }
 
 /**
@@ -789,46 +813,58 @@ async function exportSingleImage(imageState) {
  * @param {string} filename - The filename for the download
  * @param {number} maxBytes - Maximum file size in bytes
  */
-function exportJpegWithMaxSize(canvas, filename, maxBytes) {
-    return new Promise((resolve, reject) => {
-        let quality = INITIAL_JPEG_QUALITY;
+function mimeToExtension(mime) {
+    if (mime === 'image/webp') return 'webp';
+    if (mime === 'image/png') return 'png';
+    return 'jpg';
+}
 
-        /**
-         * Try to export with current quality
-         */
+function exportCanvasWithFormatMaxSize(canvas, filename, mimeType, maxBytes, initialQuality = INITIAL_JPEG_QUALITY) {
+    return new Promise((resolve, reject) => {
+        let quality = initialQuality;
+
         const tryExport = () => {
-            canvas.toBlob(
-                (blob) => {
-                    if (!blob) {
-                        reject(new Error('Failed to create blob'));
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    reject(new Error('Failed to create blob'));
+                    return;
+                }
+
+                // If acceptable size or PNG (no quality control), finish
+                if (blob.size <= maxBytes || mimeType === 'image/png') {
+                    // If PNG still exceeds limit, fallback to JPEG
+                    if (mimeType === 'image/png' && blob.size > maxBytes) {
+                        console.warn('PNG exceeds size limit - falling back to JPEG compression.');
+                        mimeType = 'image/jpeg';
+                        quality = Math.max(MIN_JPEG_QUALITY, quality - QUALITY_STEP);
+                        tryExport();
                         return;
                     }
 
-                    // Check if size is acceptable or quality is at minimum
-                    if (blob.size <= maxBytes || quality <= MIN_JPEG_QUALITY) {
-                        // Trigger download
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
 
-                        // Log export info
-                        console.log(`Exported ${filename}: ${(blob.size / 1024).toFixed(2)} KB at quality ${quality.toFixed(2)}`);
-                        
-                        resolve();
+                    console.log(`Exported ${filename}: ${(blob.size / 1024).toFixed(2)} KB at mime ${mimeType} quality ${quality.toFixed ? quality.toFixed(2) : quality}`);
+                    resolve();
+                } else {
+                    // Try reduce quality for lossy formats
+                    if (mimeType === 'image/jpeg' || mimeType === 'image/webp') {
+                        quality = Math.max(MIN_JPEG_QUALITY, quality - QUALITY_STEP);
+                        tryExport();
                     } else {
-                        // Reduce quality and try again
+                        // Other formats - convert to JPEG as fallback
+                        mimeType = 'image/jpeg';
                         quality = Math.max(MIN_JPEG_QUALITY, quality - QUALITY_STEP);
                         tryExport();
                     }
-                },
-                'image/jpeg',
-                quality
-            );
+                }
+            }, mimeType, (mimeType === 'image/png' ? undefined : quality));
         };
 
         tryExport();

@@ -340,6 +340,35 @@ body {
     flex-wrap: wrap;
 }
 
+.options-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+}
+
+.options-row .option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.options-row select,
+.options-row input[type="range"] {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+#qualityLabel { font-weight: 600; color: var(--text-primary); margin-left: 0.25rem; }
+
 /* ===================================
    Buttons
    =================================== */
