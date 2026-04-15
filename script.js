@@ -204,46 +204,92 @@ async function handleFileUpload(event) {
 }
 
 /**
+ * Strip EXIF metadata from an image by redrawing it on a canvas
+ * This removes location, orientation, and other sensitive metadata
+ * @param {Image} img - The image element to process
+ * @returns {Promise<Image>} - Promise that resolves to a new image without metadata
+ */
+function stripImageMetadata(img) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Create a temporary canvas
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            
+            const ctx = tempCanvas.getContext('2d');
+            // Draw the image on the canvas (this removes all EXIF data)
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert canvas back to image
+            const newImg = new Image();
+            newImg.onload = () => {
+                resolve(newImg);
+            };
+            newImg.onerror = () => {
+                reject(new Error('Failed to process image'));
+            };
+            
+            // Get canvas data URL (no metadata)
+            newImg.src = tempCanvas.toDataURL('image/png');
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
  * Load an image file and create initial state
  * @param {File} file - The image file to load
  * @returns {Promise<Object>} - Promise that resolves to image state object
  */
-function loadImage(file) {
+async function loadImage(file) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
 
-        img.onload = () => {
-            // Don't revoke URL - we need it for thumbnails
-            // Store the URL in the image state for later cleanup if needed
-            
-            // Calculate scales for cover (may crop) and contain (fit fully)
-            const scaleX = EDITOR_CANVAS_WIDTH / img.width;
-            const scaleY = EDITOR_CANVAS_HEIGHT / img.height;
-            const minScaleCover = Math.max(scaleX, scaleY);  // cover - fills frame, may crop
-            const minScaleContain = Math.min(scaleX, scaleY); // contain - fits fully
+        img.onload = async () => {
+            try {
+                // Strip metadata from the image
+                const cleanImg = await stripImageMetadata(img);
+                
+                // Don't revoke URL - we need it for thumbnails
+                // Store the URL in the image state for later cleanup if needed
+                
+                // Calculate scales for cover (may crop) and contain (fit fully)
+                const scaleX = EDITOR_CANVAS_WIDTH / cleanImg.width;
+                const scaleY = EDITOR_CANVAS_HEIGHT / cleanImg.height;
+                const minScaleCover = Math.max(scaleX, scaleY);  // cover - fills frame, may crop
+                const minScaleContain = Math.min(scaleX, scaleY); // contain - fits fully
 
-            // Choose initial scale based on current UI mode (compress-only shows full image)
-            const initialScale = (modeCompressOnly && modeCompressOnly.checked) ? minScaleContain : minScaleCover;
+                // Choose initial scale based on current UI mode (compress-only shows full image)
+                const initialScale = (modeCompressOnly && modeCompressOnly.checked) ? minScaleContain : minScaleCover;
 
-            const imageState = {
-                file: file,
-                img: img,
-                imageUrl: url,  // Keep reference to URL
-                scale: initialScale,
-                offsetX: 0,
-                offsetY: 0,
-                // store both scales for future toggling
-                minScaleCover: minScaleCover,
-                minScaleContain: minScaleContain,
-                // current minScale used for zoom constraints
-                minScale: initialScale
-            };
+                const imageState = {
+                    file: file,
+                    img: cleanImg,
+                    imageUrl: cleanImg.src,  // Use cleaned image URL
+                    scale: initialScale,
+                    offsetX: 0,
+                    offsetY: 0,
+                    // store both scales for future toggling
+                    minScaleCover: minScaleCover,
+                    minScaleContain: minScaleContain,
+                    // current minScale used for zoom constraints
+                    minScale: initialScale
+                };
 
-            // Initialize with centered position using the chosen scale
-            initImageState(imageState);
-            
-            resolve(imageState);
+                // Initialize with centered position using the chosen scale
+                initImageState(imageState);
+                
+                // Revoke the original object URL to free memory
+                URL.revokeObjectURL(url);
+                
+                resolve(imageState);
+            } catch (error) {
+                URL.revokeObjectURL(url);
+                reject(error);
+            }
         };
 
         img.onerror = () => {
